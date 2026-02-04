@@ -66,13 +66,30 @@
       align-items: center;
     }
 
+    .input-row {
+      display: flex;
+      align-items: stretch;
+    }
+
+    .browser-label {
+      font-size: 1rem;
+      padding: 0.5rem 0 0.5rem 0.75rem;
+      border: 1px solid var(--input-border);
+      border-right: none;
+      border-radius: 4px 0 0 4px;
+      background: var(--input-bg);
+      color: var(--input-placeholder);
+      white-space: nowrap;
+    }
+
     input {
       font-size: 1rem;
       padding: 0.5rem 0.75rem;
       border: 1px solid var(--input-border);
-      border-radius: 4px;
+      border-right: none;
+      border-radius: 0;
       outline: none;
-      width: 280px;
+      width: 200px;
       background: var(--input-bg);
       color: var(--input-fg);
       user-select: text;
@@ -82,8 +99,24 @@
       color: var(--input-placeholder);
     }
 
-    input:focus {
+    .input-row:focus-within .browser-label,
+    .input-row:focus-within input,
+    .input-row:focus-within .copy-btn {
       border-color: var(--input-border-focus);
+    }
+
+    .copy-btn {
+      font-size: 1rem;
+      padding: 0.5rem 0.6rem;
+      border: 1px solid var(--input-border);
+      border-radius: 0 4px 4px 0;
+      background: var(--input-bg);
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .copy-btn:active {
+      opacity: 0.6;
     }
 
     .warning {
@@ -99,13 +132,17 @@
   <main>
     <h1>BrowserID</h1>
     <form id="id-form">
-      <input
-        id="id-input"
-        type="text"
-        placeholder="Enter browser ID…"
-        autocomplete="off"
-        autofocus
-      >
+      <div class="input-row">
+        <span class="browser-label" id="browser-label"></span>
+        <input
+          id="id-input"
+          type="text"
+          placeholder="Enter browser ID…"
+          autocomplete="off"
+          autofocus
+        >
+        <button type="button" class="copy-btn" id="copy-btn">📋</button>
+      </div>
       <div id="warning" class="warning"></div>
     </form>
   </main>
@@ -114,6 +151,34 @@
     const form = document.getElementById('id-form');
     const warning = document.getElementById('warning');
     const favicon = document.getElementById('favicon');
+    const browserLabel = document.getElementById('browser-label');
+    const copyBtn = document.getElementById('copy-btn');
+
+    function detectBrowser() {
+      var ua = navigator.userAgent;
+      if (/OPR\//.test(ua)) return 'Opera';
+      if (/Edg\//.test(ua)) return 'Edge';
+      if (/Firefox\//.test(ua)) return 'Firefox';
+      if (/Chrome\//.test(ua)) return 'Chrome';
+      if (/Safari\//.test(ua)) return 'Safari';
+      return 'Browser';
+    }
+
+    var browser = detectBrowser();
+
+    function setBrowser(name) {
+      browser = name;
+      browserLabel.textContent = name + ':';
+      syncTitle();
+    }
+
+    setBrowser(browser);
+
+    if (navigator.brave && navigator.brave.isBrave) {
+      navigator.brave.isBrave().then(function (yes) {
+        if (yes) setBrowser('Brave');
+      });
+    }
 
     function faviconSvg(fill) {
       return "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><text x='32' y='64' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='bold' font-size='100' fill='" + fill + "'>⟐</text></svg>";
@@ -126,6 +191,7 @@
 
     updateFavicon();
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateFavicon);
+
     const VALID = /^[a-zA-Z0-9_ -]*$/;
     let debounceTimer;
 
@@ -140,13 +206,21 @@
     function getIdFromHash() {
       const hash = location.hash;
       if (hash.startsWith('#/') && hash.length > 2) {
-        return fromHash(decodeURIComponent(hash.slice(2)));
+        var raw = fromHash(decodeURIComponent(hash.slice(2)));
+        var colon = raw.indexOf(':');
+        if (colon > 0) raw = raw.slice(colon + 1);
+        return raw;
       }
       return '';
     }
 
-    function updateTitle(id) {
-      document.title = id ? '\uD83C\uDD94:' + toHash(id) : 'BrowserID';
+    function compositeId(id) {
+      return browser + ':' + toHash(id);
+    }
+
+    function syncTitle() {
+      var id = getIdFromHash();
+      document.title = id ? '\uD83C\uDD94:' + compositeId(id) : 'BrowserID';
     }
 
     function setHash(value) {
@@ -155,7 +229,7 @@
       } else {
         history.replaceState(null, '', location.pathname + location.search);
       }
-      updateTitle(value);
+      syncTitle();
     }
 
     function validate(value) {
@@ -168,14 +242,21 @@
     }
 
     function sync() {
-      const id = getIdFromHash();
-      updateTitle(id);
+      var id = getIdFromHash();
       input.value = id;
       validate(id);
+      syncTitle();
     }
 
+    copyBtn.addEventListener('click', function () {
+      var id = getIdFromHash();
+      if (id) {
+        navigator.clipboard.writeText(compositeId(id));
+      }
+    });
+
     input.addEventListener('input', function () {
-      const value = input.value;
+      var value = input.value;
       if (!validate(value)) return;
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(function () {
@@ -185,7 +266,7 @@
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      const value = input.value;
+      var value = input.value;
       if (!validate(value)) return;
       clearTimeout(debounceTimer);
       setHash(value);

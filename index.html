@@ -6,6 +6,30 @@
   <title>BrowserID</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><text x='32' y='64' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='bold' font-size='100' fill='lightgray'>⟐</text></svg>">
   <style>
+    :root {
+      --bg: #fff;
+      --fg: #777;
+      --input-bg: #fff;
+      --input-fg: #555;
+      --input-border: #ccc;
+      --input-border-focus: #999;
+      --input-placeholder: #aaa;
+      --warning: #d44;
+      --main-offset: 33vh;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111;
+        --fg: #888;
+        --input-bg: #222;
+        --input-fg: #aaa;
+        --input-border: #444;
+        --input-border-focus: #666;
+        --input-placeholder: #555;
+      }
+    }
+
     *,
     *::before,
     *::after {
@@ -20,28 +44,12 @@
 
     body {
       display: flex;
-      align-items: center;
       justify-content: center;
+      padding-top: var(--main-offset);
       font-family: system-ui, -apple-system, sans-serif;
-      background: #fff;
-      color: #111;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      body {
-        background: #111;
-        color: #eee;
-      }
-
-      input {
-        background: #222;
-        color: #eee;
-        border-color: #444;
-      }
-
-      input::placeholder {
-        color: #777;
-      }
+      background: var(--bg);
+      color: var(--fg);
+      user-select: none;
     }
 
     main {
@@ -62,21 +70,28 @@
     input {
       font-size: 1rem;
       padding: 0.5rem 0.75rem;
-      border: 1px solid #ccc;
+      border: 1px solid var(--input-border);
       border-radius: 4px;
       outline: none;
       width: 280px;
+      background: var(--input-bg);
+      color: var(--input-fg);
+      user-select: text;
+    }
+
+    input::placeholder {
+      color: var(--input-placeholder);
     }
 
     input:focus {
-      border-color: #888;
+      border-color: var(--input-border-focus);
     }
 
     .warning {
       height: 1.5rem;
       line-height: 1.5rem;
       font-size: 0.8rem;
-      color: #d44;
+      color: var(--warning);
       margin-top: 0.25rem;
     }
   </style>
@@ -90,6 +105,7 @@
         type="text"
         placeholder="Enter browser ID…"
         autocomplete="off"
+        autofocus
       >
       <div id="warning" class="warning"></div>
     </form>
@@ -98,24 +114,32 @@
     const input = document.getElementById('id-input');
     const form = document.getElementById('id-form');
     const warning = document.getElementById('warning');
-    const VALID = /^[a-zA-Z0-9_-]*$/;
+    const VALID = /^[a-zA-Z0-9_ -]*$/;
     let debounceTimer;
+
+    function toHash(value) {
+      return value.replace(/ /g, '\u2014');
+    }
+
+    function fromHash(value) {
+      return value.replace(/\u2014/g, ' ');
+    }
 
     function getIdFromHash() {
       const hash = location.hash;
       if (hash.startsWith('#/') && hash.length > 2) {
-        return decodeURIComponent(hash.slice(2));
+        return fromHash(decodeURIComponent(hash.slice(2)));
       }
       return '';
     }
 
     function updateTitle(id) {
-      document.title = id ? '\uD83C\uDD94:' + id : 'BrowserID';
+      document.title = id ? '\uD83C\uDD94:' + toHash(id) : 'BrowserID';
     }
 
     function setHash(value) {
       if (value) {
-        location.hash = '#/' + value;
+        location.hash = '#/' + toHash(value);
       } else {
         history.replaceState(null, '', location.pathname + location.search);
       }
@@ -124,7 +148,7 @@
 
     function validate(value) {
       if (!VALID.test(value)) {
-        warning.textContent = '\u26A0\uFE0F Only letters, numbers, dashes, and underscores allowed';
+        warning.textContent = '\u26A0\uFE0F Only letters, numbers, spaces, dashes, and underscores allowed';
         return false;
       }
       warning.textContent = '';

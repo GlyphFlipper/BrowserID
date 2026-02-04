@@ -1,5 +1,3 @@
 # BrowserID
 
-Tag browser tabs with custom IDs. The ID lives in the URL hash (`#/MyID`) and shows in the tab title, so you can tell identical tabs apart at a glance.
-
-Open the page, type an ID, done. Bookmark the URL to reuse it.
+Lightweight browser automation anchor. Assigns a stable, automation-readable tab title (`🆔:<ID>`) from the URL hash (`#/<ID>`), so external tools can reliably locate, focus, or reposition browser windows without backend state.

@@ -15,6 +15,7 @@
       --input-border-focus: #999;
       --input-placeholder: #aaa;
       --warning: #d44;
+      --input-width: 280px;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -79,7 +80,8 @@
       border-radius: 4px 0 0 4px;
       background: var(--input-bg);
       color: var(--input-placeholder);
-      white-space: nowrap;
+      white-space: pre;
+      filter: brightness(0.8) contrast(1.1);
     }
 
     input {
@@ -89,7 +91,7 @@
       border-right: none;
       border-radius: 0;
       outline: none;
-      width: 200px;
+      width: var(--input-width);
       background: var(--input-bg);
       color: var(--input-fg);
       user-select: text;
@@ -168,7 +170,7 @@
 
     function setBrowser(name) {
       browser = name;
-      browserLabel.textContent = name + ':';
+      browserLabel.textContent = name + ': ';
       syncTitle();
     }
 

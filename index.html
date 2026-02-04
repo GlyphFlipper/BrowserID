@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BrowserID</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><text x='32' y='64' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='bold' font-size='100' fill='lightgray'>⟐</text></svg>">
+  <link id="favicon" rel="icon" type="image/svg+xml">
   <style>
     :root {
       --bg: #fff;
@@ -114,6 +114,19 @@
     const input = document.getElementById('id-input');
     const form = document.getElementById('id-form');
     const warning = document.getElementById('warning');
+    const favicon = document.getElementById('favicon');
+
+    function faviconSvg(fill) {
+      return "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><text x='32' y='64' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='bold' font-size='100' fill='" + fill + "'>⟐</text></svg>";
+    }
+
+    function updateFavicon() {
+      var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      favicon.href = faviconSvg(dark ? 'lightgray' : 'darkgray');
+    }
+
+    updateFavicon();
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateFavicon);
     const VALID = /^[a-zA-Z0-9_ -]*$/;
     let debounceTimer;
 

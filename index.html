@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BrowserID</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #fff;
+      color: #111;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #111;
+        color: #eee;
+      }
+
+      input {
+        background: #222;
+        color: #eee;
+        border-color: #444;
+      }
+
+      input::placeholder {
+        color: #777;
+      }
+    }
+
+    main {
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    form {
+      display: flex;
+      justify-content: center;
+    }
+
+    input {
+      font-size: 1rem;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      outline: none;
+      width: 280px;
+    }
+
+    input:focus {
+      border-color: #888;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>BrowserID</h1>
+    <form id="id-form">
+      <input
+        id="id-input"
+        type="text"
+        placeholder="Enter workspace ID\u2026"
+        autocomplete="off"
+      >
+    </form>
+  </main>
+  <script>
+    const input = document.getElementById('id-input');
+    const form = document.getElementById('id-form');
+
+    function getIdFromHash() {
+      const hash = location.hash;
+      if (hash.startsWith('#/') && hash.length > 2) {
+        return decodeURIComponent(hash.slice(2));
+      }
+      return '';
+    }
+
+    function sync() {
+      const id = getIdFromHash();
+      document.title = id ? 'BrowserID:' + id : 'BrowserID';
+      input.value = id;
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const value = input.value;
+      if (value) {
+        location.hash = '#/' + value;
+      } else {
+        history.replaceState(null, '', location.pathname + location.search);
+        sync();
+      }
+    });
+
+    window.addEventListener('hashchange', sync);
+
+    sync();
+  </script>
+</body>
+</html>

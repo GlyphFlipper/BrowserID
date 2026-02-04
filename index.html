@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BrowserID</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%23222'/><text x='32' y='44' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='bold' font-size='28' fill='white'>ID</text></svg>">
   <style>
     *,
     *::before,
@@ -54,7 +55,8 @@
 
     form {
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
     }
 
     input {
@@ -69,6 +71,14 @@
     input:focus {
       border-color: #888;
     }
+
+    .warning {
+      height: 1.5rem;
+      line-height: 1.5rem;
+      font-size: 0.8rem;
+      color: #d44;
+      margin-top: 0.25rem;
+    }
   </style>
 </head>
 <body>
@@ -78,14 +88,18 @@
       <input
         id="id-input"
         type="text"
-        placeholder="Enter workspace ID\u2026"
+        placeholder="Enter browser ID…"
         autocomplete="off"
       >
+      <div id="warning" class="warning"></div>
     </form>
   </main>
   <script>
     const input = document.getElementById('id-input');
     const form = document.getElementById('id-form');
+    const warning = document.getElementById('warning');
+    const VALID = /^[a-zA-Z0-9_-]*$/;
+    let debounceTimer;
 
     function getIdFromHash() {
       const hash = location.hash;
@@ -95,21 +109,50 @@
       return '';
     }
 
-    function sync() {
-      const id = getIdFromHash();
-      document.title = id ? 'BrowserID:' + id : 'BrowserID';
-      input.value = id;
+    function updateTitle(id) {
+      document.title = id ? '\uD83C\uDD94:' + id : 'BrowserID';
     }
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      const value = input.value;
+    function setHash(value) {
       if (value) {
         location.hash = '#/' + value;
       } else {
         history.replaceState(null, '', location.pathname + location.search);
-        sync();
       }
+      updateTitle(value);
+    }
+
+    function validate(value) {
+      if (!VALID.test(value)) {
+        warning.textContent = 'Only letters, numbers, dashes, and underscores allowed';
+        return false;
+      }
+      warning.textContent = '';
+      return true;
+    }
+
+    function sync() {
+      const id = getIdFromHash();
+      updateTitle(id);
+      input.value = id;
+      validate(id);
+    }
+
+    input.addEventListener('input', function () {
+      const value = input.value;
+      if (!validate(value)) return;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function () {
+        setHash(value);
+      }, 300);
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const value = input.value;
+      if (!validate(value)) return;
+      clearTimeout(debounceTimer);
+      setHash(value);
     });
 
     window.addEventListener('hashchange', sync);

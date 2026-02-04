@@ -206,10 +206,7 @@
     function getIdFromHash() {
       const hash = location.hash;
       if (hash.startsWith('#/') && hash.length > 2) {
-        var raw = fromHash(decodeURIComponent(hash.slice(2)));
-        var colon = raw.indexOf(':');
-        if (colon > 0) raw = raw.slice(colon + 1);
-        return raw;
+        return fromHash(decodeURIComponent(hash.slice(2)));
       }
       return '';
     }
